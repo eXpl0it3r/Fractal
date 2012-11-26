@@ -2,10 +2,14 @@
 
 #include "Fractal.hpp"
 
+//#include <SFGUI/SFGUI.hpp>
+
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Text.hpp>
+#include <SFML/Graphics/View.hpp>
+#include <SFML/System/Clock.hpp>
 #include <SFML/System/Vector2.hpp>
 
 class Application
@@ -20,6 +24,8 @@ private:
 
     void paused(bool fractal = true);
 
+    void onResize();
+
 private:
     sf::RenderWindow m_window;
     Fractal m_fractal;
@@ -27,4 +33,11 @@ private:
     sf::RectangleShape m_select;
     sf::Font m_font;
     sf::Text m_precision;
+    sf::Clock m_frametime;
+
+    sf::View m_staticView;
+    bool m_resized;
+
+    //sfg::SFGUI m_sfgui;
+    //sfg::Desktop m_desktop;
 };

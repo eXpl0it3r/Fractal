@@ -6,21 +6,27 @@
 #include <functional>
 #include <iostream>
 
-Fractal::Fractal(const sf::Vector2u& size, unsigned int threads) :
-    m_pixels(size.x*size.y*4, 0),
+Fractal::Fractal(const sf::Vector2u& size, const unsigned int threads) :
     m_pos(-0.7, 0., 0.003),
     m_pfact(3.f),
     m_precision(500.),
     m_X(-200, 2, 4, 255),
     m_sX(3, -1, -7)
 {
-    m_texture.create(size.x, size.y);
-    m_fractal.setTexture(m_texture, true);
+    resize(size, threads);
+}
+
+void Fractal::setThreads(const unsigned int threads)
+{
+    // Stop and clear threads
+    for(auto &thread : m_threads)
+        thread->wait();
+    m_threads.clear();
 
     std::vector<sf::Rect<unsigned int>> rects(threads*threads);
 
-    unsigned int width = size.x/threads;
-    unsigned int height = size.y/threads;
+    unsigned int width = m_texture.getSize().x/threads;
+    unsigned int height = m_texture.getSize().y/threads;
 
     for(unsigned int y=0; y < threads; ++y)
     {
@@ -28,9 +34,9 @@ Fractal::Fractal(const sf::Vector2u& size, unsigned int threads) :
         {
             rects[(y*threads)+x] = sf::Rect<unsigned int>(x*width, y*height, (x+1)*width, (y+1)*height);
         }
-        rects[(y*threads)+(threads-1)] = sf::Rect<unsigned int>((threads-1)*width, y*height, size.x, (y+1)*height);
+        rects[(y*threads)+(threads-1)] = sf::Rect<unsigned int>((threads-1)*width, y*height, m_texture.getSize().x, (y+1)*height);
     }
-    rects[((threads-1)*threads)+(threads-1)] = sf::Rect<unsigned int>((threads-1)*width, (threads-1)*height, size.x, size.y);
+    rects[((threads-1)*threads)+(threads-1)] = sf::Rect<unsigned int>((threads-1)*width, (threads-1)*height, m_texture.getSize().x, m_texture.getSize().y);
 
     for(auto &rect : rects)
     {
@@ -38,11 +44,19 @@ Fractal::Fractal(const sf::Vector2u& size, unsigned int threads) :
     }
 }
 
-void Fractal::resize(const sf::Vector2u& size)
+void Fractal::resize(const sf::Vector2u& size, const unsigned int threads)
 {
+    // Reset values
+    m_pos = sf::Vector3<long double>(-0.7, 0., 0.003);
+    m_pfact = 3.f;
+    m_precision = 500.;
+    m_X = sf::Color(-200, 2, 4, 255);
+    m_sX = sf::Color(3, -1, -7);
+
     m_pixels.resize(size.x*size.y*4, 0);
     m_texture.create(size.x, size.y);
-    m_fractal.setTextureRect(sf::IntRect(0, 0, m_texture.getSize().x, m_texture.getSize().y));
+    m_fractal.setTexture(m_texture, true);
+    setThreads(threads);
 }
 
 void Fractal::update(const sf::Vector2i& first, const sf::Vector2i& second)
@@ -110,7 +124,7 @@ void Fractal::generate(sf::Rect<unsigned int> section)
     for(int x = section.left; x < section.width; ++x)
         for(int y = section.top; y < section.height; ++y)
         {
-            // mathematical value
+            // Mathematical values
             ax = m_pos.x+(x-mx)*m_pos.z;
             ay = m_pos.y+(y-my)*m_pos.z;
 
@@ -125,13 +139,12 @@ void Fractal::generate(sf::Rect<unsigned int> section)
                 b1 = 2*a1*b1 + ay;
                 a1 = a2; // b1 = b2;
             } while(!((iteration > m_precision) || ((a1*a1) + (b1*b1) > 4)));
-            //1. condition: we have convergence. 2. condition: we have divergence.
+            // 1. condition: we have convergence. 2. condition: we have divergence.
 
             if(iteration > m_precision)
-                iteration = 0; //Punkt gehört zur Menge (innere schwarze Fläche)
+                iteration = 0; // Point belongs to the set (inner black area)
 
-            //(x, y, iteration, (a1*a1) + (b1*b1)); //draw berechnet die Farbe aufgrund der iteration (und ev. des letzten Reihenelements)
-
+            //(x, y, iteration, (a1*a1) + (b1*b1)); // calculates the color regarding the iteration (and maybe the last element of the series)
             sf::Color pixel(0, 0, 0, 255);
 
             if(iteration > 0)
@@ -176,10 +189,10 @@ void Fractal::generate(sf::Rect<unsigned int> section)
                     pixel.b = 255 + m_X.b - (pixel.b % (255+m_X.b));
             }
 
-            m_pixels[((y*1024)+x)*4] = pixel.r;
-            m_pixels[((y*1024)+x)*4+1] = pixel.g;
-            m_pixels[((y*1024)+x)*4+2] = pixel.b;
-            m_pixels[((y*1024)+x)*4+3] = pixel.a;
+            m_pixels[((y*m_texture.getSize().x)+x)*4] = pixel.r;
+            m_pixels[((y*m_texture.getSize().x)+x)*4+1] = pixel.g;
+            m_pixels[((y*m_texture.getSize().x)+x)*4+2] = pixel.b;
+            m_pixels[((y*m_texture.getSize().x)+x)*4+3] = pixel.a;
         }
 }
 
