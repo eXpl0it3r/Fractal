@@ -10,8 +10,9 @@ Fractal::Fractal(const sf::Vector2u& size, const unsigned int threads) :
     m_pos(-0.7, 0., 0.003),
     m_pfact(3.f),
     m_precision(500.),
-    m_X(-200, 2, 4, 255),
-    m_sX(3, -1, -7)
+    m_min(-2.0, 1.0),
+    m_max(-1.2, (1.8*size.y)/static_cast<long double>(size.x)),
+    m_factor(3.0/(size.x-1), (m_max.y-m_min.y)/(size.y-1))
 {
     resize(size, threads);
 }
@@ -19,26 +20,26 @@ Fractal::Fractal(const sf::Vector2u& size, const unsigned int threads) :
 void Fractal::setThreads(const unsigned int threads)
 {
     // Stop and clear threads
-    for (auto& thread : m_threads)
+    for(auto &thread : m_threads)
         thread->wait();
     m_threads.clear();
 
-    std::vector<sf::Rect<unsigned int>> rects(threads * threads);
+    std::vector<sf::Rect<unsigned int>> rects(threads*threads);
 
-    unsigned int width = m_texture.getSize().x / threads;
-    unsigned int height = m_texture.getSize().y / threads;
+    unsigned int width = m_texture.getSize().x/threads;
+    unsigned int height = m_texture.getSize().y/threads;
 
-    for (unsigned int y = 0; y < threads; ++y)
+    for(unsigned int y=0; y < threads; ++y)
     {
-        for (unsigned int x = 0; x < threads; ++x)
+        for(unsigned int x=0; x < threads; ++x)
         {
-            rects[(y * threads) + x] = sf::Rect<unsigned int>(x * width, y * height, (x + 1) * width, (y + 1) * height);
+            rects[(y*threads)+x] = sf::Rect<unsigned int>(x*width, y*height, (x+1)*width, (y+1)*height);
         }
-        rects[(y * threads) + (threads - 1)] = sf::Rect<unsigned int>((threads - 1) * width, y * height, m_texture.getSize().x, (y + 1) * height);
+        rects[(y*threads)+(threads-1)] = sf::Rect<unsigned int>((threads-1)*width, y*height, m_texture.getSize().x, (y+1)*height);
     }
-    rects[((threads - 1) * threads) + (threads - 1)] = sf::Rect<unsigned int>((threads - 1) * width, (threads - 1) * height, m_texture.getSize().x, m_texture.getSize().y);
+    rects[((threads-1)*threads)+(threads-1)] = sf::Rect<unsigned int>((threads-1)*width, (threads-1)*height, m_texture.getSize().x, m_texture.getSize().y);
 
-    for (auto& rect : rects)
+    for(auto &rect : rects)
     {
         m_threads.push_back(std::unique_ptr<sf::Thread>(new sf::Thread(std::bind(&Fractal::generate, this, rect))));
     }
@@ -50,10 +51,11 @@ void Fractal::resize(const sf::Vector2u& size, const unsigned int threads)
     m_pos = sf::Vector3<long double>(-0.7, 0., 0.003);
     m_pfact = 3.f;
     m_precision = 500.;
-    m_X = sf::Color(-200, 2, 4, 255);
-    m_sX = sf::Color(3, -1, -7);
 
-    m_pixels.resize(size.x * size.y * 4, 0);
+    //m_max.y = m_min.y+(m_max.x-m_min.x)*size.y/static_cast<long double>(size.x);
+    //m_factor = sf::Vector2<long double>((m_max.x-m_min.x)/static_cast<long double>(size.x-1), (m_max.y-m_min.y)/static_cast<long double>(size.y-1));
+
+    m_pixels.resize(size.x*size.y*4, 0);
     m_texture.create(size.x, size.y);
     m_fractal.setTexture(m_texture, true);
     setThreads(threads);
@@ -61,148 +63,148 @@ void Fractal::resize(const sf::Vector2u& size, const unsigned int threads)
 
 void Fractal::update(const sf::Vector2i& first, const sf::Vector2i& second)
 {
-    sf::Vector3<long double> posTemp;
+    sf::Vector2i firstTemp;
+    sf::Vector2i secondTemp;
 
-    if (std::abs(first.x - second.x) < 5 && std::abs(first.y - second.y) < 5)
+    // Not an actual selection but just a click
+    if(std::abs(first.x - second.x) <= 5 && std::abs(first.y - second.y) <= 5)
     {
-        posTemp.x = m_pos.x + (first.x - m_texture.getSize().x / 2.) * m_pos.z;
-        posTemp.y = m_pos.y + (first.y - m_texture.getSize().y / 2.) * m_pos.z;
-        posTemp.z = m_pos.z;
+
     }
+    // New area selected
     else
     {
-        if (second.x < first.x)
-            posTemp.x = m_pos.x + (first.x - (first.x - second.x) / 2. - m_texture.getSize().x / 2.) * m_pos.z; //x-coord
+        // Transform to a top-left & bottom-right rectangle
+        // 1st quadrant
+        if(first.x < second.x && first.y > second.y)
+        {
+            firstTemp = sf::Vector2i(first.x, second.y);
+            secondTemp = sf::Vector2i(second.x, first.y);
+        }
+        // 2nd quadrant
+        else if(first.x > second.x && first.y > second.y)
+        {
+            firstTemp = second;
+            secondTemp = first;
+        }
+        // 3rd quadrant
+        else if(first.x > second.x && first.y < second.y)
+        {
+            firstTemp = sf::Vector2i(second.x, first.y);
+            secondTemp = sf::Vector2i(first.x, second.y);
+        }
+        // 4th quadrant
         else
-            posTemp.x = m_pos.x + (second.x - (second.x - first.x) / 2. - m_texture.getSize().x / 2.) * m_pos.z;
+        {
+            firstTemp = first;
+            secondTemp = second;
+        }
 
-        if (second.y < first.y)
-            posTemp.y = m_pos.y + (first.y - (first.y - second.y) / 2. - m_texture.getSize().y / 2.) * m_pos.z; //y-coord
-        else
-            posTemp.y = m_pos.y + (second.y - (second.y - first.y) / 2. - m_texture.getSize().y / 2.) * m_pos.z;
-
-        posTemp.z = m_pos.z * (std::abs(first.x - second.x) / static_cast<long double>(m_texture.getSize().x) + std::abs(first.y - second.y) / static_cast<long double>(m_texture.getSize().y)) / 2.; //scale
+        // Reset values
+        //m_min = sf::Vector2<long double>(firstTemp.x*m_factor.x, firstTemp.y*m_factor.y);
+        //m_max = sf::Vector2<long double>(secondTemp.x*m_factor.x, secondTemp.y*m_factor.y);
+        //m_factor = sf::Vector2<long double>((m_max.x-m_min.x)/static_cast<long double>(m_texture.getSize().x-1), (m_max.y-m_min.y)/static_cast<long double>(m_texture.getSize().y-1));
     }
 
-    m_pos = posTemp;
-
-    for (auto& thread : m_threads)
+    // Recalculate image
+    for(auto &thread : m_threads)
         thread->launch();
 
-    for (auto& thread : m_threads)
+    for(auto &thread : m_threads)
         thread->wait();
 
     m_texture.update(m_pixels.data());
 }
 
-void Fractal::precision(const long double& precision)
+void Fractal::precision(const long double precision)
 {
-    if (precision > 0)
+    if(precision > 0)
         m_precision = precision;
     else
         m_precision = 10;
 }
 
-const long double& Fractal::precision()
+const long double Fractal::precision()
 {
     return m_precision;
 }
 
+const long double Fractal::zoom()
+{
+    return m_pos.z;
+}
+
+const long double Fractal::devisor()
+{
+    return m_pfact;
+}
+
+const sf::Vector2<long double> Fractal::position()
+{
+    return sf::Vector2<long double>(m_pos.x, m_pos.y);
+}
+
 void Fractal::generate(sf::Rect<unsigned int> section)
 {
-    int mx = static_cast<int>(m_texture.getSize().x / 2.f);
-    int my = static_cast<int>(m_texture.getSize().y / 2.f);
+    m_min.x = -2.0;
+    m_min.y = 1.0;
+    m_max.x = -1.2;
+    m_max.y = m_min.y+(m_max.x-m_min.x)*768.0/1000.0;
+    m_factor.x = (m_max.x - m_min.x)/(1000.0-1);
+    m_factor.y = (m_max.y - m_min.y)/(768.0-1);
 
-    int iteration = 0;
+    sf::Vector2<long double> c(0., 0.);
 
-    long double ax = 0;
-    long double ay = 0;
-    long double a1 = 0;
-    long double a2 = 0;
-    long double b1 = 0;
-
-    for (int x = section.left; x < section.width; ++x)
-        for (int y = section.top; y < section.height; ++y)
+    for(unsigned int y = section.top; y < section.height; ++y)
+    {
+        c.y = m_max.y - y*m_factor.y;
+        for(unsigned int x = section.left; x < section.width; ++x)
         {
-            // Mathematical values
-            ax = m_pos.x + (x - mx) * m_pos.z;
-            ay = m_pos.y + (y - my) * m_pos.z;
+            c.x = m_min.x + x*m_factor.x;
 
-            a1 = ax;
-            b1 = ay;
-            iteration = 0;
-
-            do
+            sf::Vector2<long double> Z(c);
+            bool isInside = true;
+            unsigned int N = 0;
+            for(unsigned int n = 0; n < m_precision; ++n)
             {
-                ++iteration;
-                a2 = a1 * a1 - b1 * b1 + ax; // square of a+bi, done component-wise
-                b1 = 2 * a1 * b1 + ay;
-                a1 = a2; // b1 = b2;
-            } while (!((iteration > m_precision) || ((a1 * a1) + (b1 * b1) > 4)));
-            // 1. condition: we have convergence. 2. condition: we have divergence.
-
-            if (iteration > m_precision)
-                iteration = 0; // Point belongs to the set (inner black area)
-
-            //(x, y, iteration, (a1*a1) + (b1*b1)); // calculates the color regarding the iteration (and maybe the last element of the series)
-            sf::Color pixel(0, 0, 0, 255);
-
-            if (iteration > 0)
-            {
-                if (m_sX.r < 0)
-                    if (m_X.r < 0)
-                        pixel.r = color(iteration, (a1 * a1) + (b1 * b1), m_X.r, m_sX.r, -1);
-                    else
-                        pixel.r = color(iteration, (a1 * a1) + (b1 * b1), m_X.r, m_sX.r, 1);
-                else
-                    pixel.r = iteration * m_sX.r / m_pfact;
-
-                if (m_sX.g < 0)
-                    if (m_X.g < 0)
-                        pixel.g = color(iteration, (a1 * a1) + (b1 * b1), m_X.g, m_sX.g, -1);
-                    else
-                        pixel.g = color(iteration, (a1 * a1) + (b1 * b1), m_X.g, m_sX.g, 1);
-                else
-                    pixel.g = iteration * m_sX.g / m_pfact;
-
-                if (m_sX.b < 0)
-                    if (m_X.b < 0)
-                        pixel.b = color(iteration, (a1 * a1) + (b1 * b1), m_X.b, m_sX.b, -1);
-                    else
-                        pixel.b = color(iteration, (a1 * a1) + (b1 * b1), m_X.b, m_sX.b, 1);
-                else
-                    pixel.b = iteration * m_sX.b / m_pfact;
-
-                if (m_X.r > 0)
-                    pixel.r = pixel.r % (255 - m_X.r);
-                else if (m_sX.r != 0)
-                    pixel.r = 255 + m_X.r - (pixel.r % (255 + m_X.r));
-
-                if (m_X.g > 0)
-                    pixel.g = pixel.g % (255 - m_X.g);
-                else if (m_sX.g != 0)
-                    pixel.g = 255 + m_X.g - (pixel.g % (255 + m_X.g));
-
-                if (m_X.b > 0)
-                    pixel.b = pixel.b % (255 - m_X.b);
-                else if (m_sX.b != 0)
-                    pixel.b = 255 + m_X.b - (pixel.b % (255 + m_X.b));
+                N = n;
+                sf::Vector2<long double> Z2(Z.x*Z.x, Z.y*Z.y);
+                if(Z2.x + Z2.y > 4.0)
+                {
+                    isInside = false;
+                    break;
+                }
+                Z.y = 2*Z.x*Z.y + c.y;
+                Z.x = Z2.x - Z2.y + c.x;
             }
 
-            m_pixels[((y * m_texture.getSize().x) + x) * 4] = pixel.r;
-            m_pixels[((y * m_texture.getSize().x) + x) * 4 + 1] = pixel.g;
-            m_pixels[((y * m_texture.getSize().x) + x) * 4 + 2] = pixel.b;
-            m_pixels[((y * m_texture.getSize().x) + x) * 4 + 3] = pixel.a;
+            sf::Color pixel;
+
+            if(isInside)
+            {
+                pixel = sf::Color::Red;
+            }
+            else
+            {
+                double color = 3*std::log(N)/std::log(m_precision - 1.0);
+
+                if(color < 1)
+                    pixel = sf::Color(255*color, 0, 0);
+                else if(color < 2)
+                    pixel = sf::Color(255, 255*(color-1), 0);
+                else
+                    pixel = sf::Color(255, 255, 255*(color-2));
+            }
+
+            m_pixels[((y*m_texture.getSize().x)+x)*4] = pixel.r;
+            m_pixels[((y*m_texture.getSize().x)+x)*4+1] = pixel.g;
+            m_pixels[((y*m_texture.getSize().x)+x)*4+2] = pixel.b;
+            m_pixels[((y*m_texture.getSize().x)+x)*4+3] = pixel.a;
         }
+    }
 }
 
-sf::Uint8 Fractal::color(const unsigned int c, const long double z, const sf::Uint8 X, const sf::Uint8 sX, const int sign) const
-{
-    return std::round(static_cast<long double>(c + 1) / (std::log(z) / std::log(static_cast<double long>(10)) + 1) *
-        (255 / (std::log(static_cast<double long>(255 * +(sign * X))) / std::log(static_cast<double long>(10))))) * -sX / m_pfact;
-}
-
-void Fractal::draw(sf::RenderTarget& target, sf::RenderStates states) const
+void Fractal::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
     target.draw(m_fractal, states);
 }

@@ -12,12 +12,24 @@ if(NOT SFML_FOUND)
 	message("-> Make sure the SFML libraries with the same configuration (Release/Debug, Static/Dynamic) exist.\n")
 endif()
 
+# Find SFGUI
+if(WIN32)
+	SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH};${CMAKE_SOURCE_DIR}/cmake/)
+endif()
+set(SFGUI_STATIC_LIBRARIES true)
+find_package(SFGUI 0.4 REQUIRED)
+if(NOT SFGUI_FOUND)
+	message("\n-> SFGUI library was not found. Set SFGUI_ROOT to SFGUI's source path and ensure CMAKE_MODULES_PATH includes the directory where FindSFGUI.cmake is located.")
+	message("-> Make sure the SFGUI library with the same configuration (Release/Debug, Static/Dynamic) exist.\n")
+endif()
+
 add_executable(Fractal 
 	src/main.cpp
 	src/Application.hpp
 	src/Application.cpp
 	src/Fractal.hpp
 	src/Fractal.cpp
+	src/Utility.hpp
 )
 
 # Use static runtime libraries
@@ -28,7 +40,8 @@ elseif(CMAKE_COMPILER_IS_GNUCXX)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
 endif()
 
-target_link_libraries(Fractal sfml-graphics)
+target_include_directories(Fractal PRIVATE $<BUILD_INTERFACE:${SFGUI_INCLUDE_DIR}>)
+target_link_libraries(Fractal ${SFGUI_LIBRARY} ${SFGUI_DEPENDENCIES} sfml-graphics)
 
 # Install executable
 install(TARGETS Fractal

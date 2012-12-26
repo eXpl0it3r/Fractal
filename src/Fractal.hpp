@@ -7,7 +7,6 @@
 #include <SFML/System/Vector2.hpp>
 #include <SFML/System/Vector3.hpp>
 #include <SFML/Graphics/Rect.hpp>
-#include <SFML/Graphics/Color.hpp>
 #include <SFML/System/Thread.hpp>
 
 #include <vector>
@@ -26,14 +25,19 @@ public:
     void update(const sf::Vector2i& first, const sf::Vector2i& second);
 
     void resize(const sf::Vector2u& size, const unsigned int threads = 3);
-    void precision(const long double& precision);
-    const long double& precision();
+
+    // Get/set state information
+    void precision(const long double precision);
+    const long double precision();
+
+    const long double zoom();
+    const long double devisor();
+    const sf::Vector2<double long> position();
 
 private:
-    void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+    void draw(sf::RenderTarget &target, sf::RenderStates states) const;
 
     void setThreads(const unsigned int threads);
-    sf::Uint8 color(const unsigned int c, const long double z, const sf::Uint8 X, const sf::Uint8 sX, const int sign) const;
     void generate(sf::Rect<unsigned int> section);
 
 private:
@@ -46,8 +50,9 @@ private:
 
     // Parameters
     sf::Vector3<long double> m_pos;
+    sf::Vector2<long double> m_min;
+    sf::Vector2<long double> m_max;
+    sf::Vector2<long double> m_factor;
     float m_pfact;
     long double m_precision;
-    sf::Color m_X;
-    sf::Color m_sX;
 };
