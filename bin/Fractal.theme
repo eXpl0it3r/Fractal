@@ -1,0 +1,18 @@
+* {
+	FontName: DejaVuSans.ttf;
+}
+
+Window {
+	BackgroundColor: #2d3d5bFF;
+	BorderColor: #35496A00;
+	BorderWidth: 0;
+	padding: 5;
+}
+
+Label {
+	Color: #CCCCCCFF;
+}
+
+Entry {
+	BackgroundColor: #486291FF;
+}

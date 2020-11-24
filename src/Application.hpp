@@ -2,8 +2,6 @@
 
 #include "Fractal.hpp"
 
-//#include <SFGUI/SFGUI.hpp>
-
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Graphics/Font.hpp>
@@ -37,7 +35,4 @@ private:
 
     sf::View m_staticView;
     bool m_resized;
-
-    //sfg::SFGUI m_sfgui;
-    //sfg::Desktop m_desktop;
 };
