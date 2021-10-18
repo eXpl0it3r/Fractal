@@ -17,30 +17,29 @@ namespace sf
     class RenderTarget;
 }
 
-class Fractal : public sf::Drawable
+class Fractal final : public sf::Drawable
 {
 public:
-    Fractal(const sf::Vector2u& size, const unsigned int threads = 3);
+    explicit Fractal(const sf::Vector2u& size, unsigned int threads = 3);
 
     void update(const sf::Vector2i& first, const sf::Vector2i& second);
 
-    void resize(const sf::Vector2u& size, const unsigned int threads = 3);
+    void resize(const sf::Vector2u& size, unsigned int threads = 3);
 
     // Get/set state information
-    void precision(const long double precision);
-    const long double precision();
+    void precision(long double precision);
+    long double precision() const;
 
-    const long double zoom();
-    const long double devisor();
-    const sf::Vector2<double long> position();
+    long double zoom() const;
+    long double divisor() const;
+    sf::Vector2<double long> position() const;
 
 private:
-    void draw(sf::RenderTarget &target, sf::RenderStates states) const;
+    void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
-    void setThreads(const unsigned int threads);
+    void setThreads(unsigned int threads);
     void generate(sf::Rect<unsigned int> section);
 
-private:
     std::vector<std::unique_ptr<sf::Thread>> m_threads;
 
     // Drawing

@@ -34,12 +34,13 @@ private:
     void createGUI();
     void onResize();
 
-private:
+    sfg::SFGUI m_sfgui;
+
     sf::RenderWindow m_window;
     Fractal m_fractal;
     sf::Vector2i m_down;
     sf::RectangleShape m_select;
-    std::shared_ptr<sf::Font> m_font;
+    sf::Font m_font;
     sf::Clock m_frametime;
 
     sf::Text m_wait;
@@ -48,7 +49,6 @@ private:
     sf::View m_staticView;
     bool m_resized;
 
-    sfg::SFGUI m_sfgui;
     sfg::Desktop m_desktop;
     sfg::Window::Ptr m_sidebar;
     float m_sidebarWidth;
@@ -62,11 +62,11 @@ private:
     sfg::Entry::Ptr m_yEntry;
     sfg::Entry::Ptr m_zoomEntry;
     sfg::Entry::Ptr m_precisionEntry;
-    sfg::Entry::Ptr m_dividorEntry;
+    sfg::Entry::Ptr m_divisorEntry;
 
     sfg::Label::Ptr m_xLabel;
     sfg::Label::Ptr m_yLabel;
     sfg::Label::Ptr m_zoomLabel;
     sfg::Label::Ptr m_precisionLabel;
-    sfg::Label::Ptr m_dividorLabel;
+    sfg::Label::Ptr m_divisorLabel;
 };

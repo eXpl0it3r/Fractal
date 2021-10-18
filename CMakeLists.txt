@@ -14,7 +14,7 @@ endif()
 
 # Find SFGUI
 if(WIN32)
-	SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH};${CMAKE_SOURCE_DIR}/cmake/)
+	SET(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_SOURCE_DIR}/cmake/")
 endif()
 set(SFGUI_STATIC_LIBRARIES true)
 find_package(SFGUI 0.4 REQUIRED)
@@ -29,8 +29,11 @@ add_executable(Fractal
 	src/Application.cpp
 	src/Fractal.hpp
 	src/Fractal.cpp
-	src/Utility.hpp
 )
+
+if(WIN32 AND MSVC)
+	set_target_properties(Fractal PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+endif()
 
 # Use static runtime libraries
 if(WIN32 AND MSVC)
