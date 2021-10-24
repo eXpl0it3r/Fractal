@@ -8,7 +8,6 @@
 #include <SFML/System/Vector3.hpp>
 #include <SFML/Graphics/Rect.hpp>
 #include <SFML/Graphics/Color.hpp>
-#include <SFML/System/Thread.hpp>
 
 #include <vector>
 #include <memory>
@@ -21,22 +20,20 @@ namespace sf
 class Fractal final : public sf::Drawable
 {
 public:
-    explicit Fractal(const sf::Vector2u& size, unsigned int threads = 3);
+    explicit Fractal(const sf::Vector2u& size, unsigned int parallelization = 3);
 
     void update(const sf::Vector2i& first, const sf::Vector2i& second);
 
-    void resize(const sf::Vector2u& size, unsigned int threads = 3);
+    void resize(const sf::Vector2u& size);
     void precision(const long double& precision);
     const long double& precision() const;
 
 private:
     void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
-    void setThreads(unsigned int threads);
     sf::Uint8 color(unsigned int c, long double z, sf::Uint8 x, sf::Uint8 sX, int sign) const;
     void generate(sf::Rect<unsigned int> section);
-
-    std::vector<std::unique_ptr<sf::Thread>> m_threads;
+    void generateParallel();
 
     // Drawing
     std::vector<sf::Uint8> m_pixels;
@@ -44,6 +41,7 @@ private:
     sf::Sprite m_fractal;
 
     // Parameters
+    unsigned int m_parallelization;
     sf::Vector3<long double> m_pos;
     float m_pfact;
     long double m_precision;

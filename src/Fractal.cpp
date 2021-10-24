@@ -4,52 +4,21 @@
 
 #include <cmath>
 #include <functional>
-#include <iostream>
+#include <future>
 
-Fractal::Fractal(const sf::Vector2u& size, const unsigned int threads) :
+Fractal::Fractal(const sf::Vector2u& size, const unsigned int parallelization) :
+    m_parallelization{ parallelization },
     m_pos{ -0.7, 0., 0.003 },
     m_pfact{ 3.f },
-    m_precision{ 500. },
+    m_precision{ 5000. },
     m_x{ -200, 2, 4, 255 },
     m_sX{ 3, -1, -7 }
 {
-    resize(size, threads);
+    resize(size);
+    generateParallel();
 }
 
-void Fractal::setThreads(const unsigned int threads)
-{
-    // Stop and clear threads
-    for (const auto& thread : m_threads)
-    {
-        thread->wait();
-    }
-    m_threads.clear();
-
-    auto rects = std::vector<sf::Rect<unsigned int>>{ threads * threads };
-
-    const auto width = m_texture.getSize().x / threads;
-    const auto height = m_texture.getSize().y / threads;
-
-    for (auto y = 0U; y < threads; ++y)
-    {
-        for (auto x = 0U; x < threads; ++x)
-        {
-            rects[(y * threads) + x] = sf::Rect{ x * width, y * height, (x + 1) * width, (y + 1) * height };
-        }
-        rects[(y * threads) + (threads - 1)] = sf::Rect{ (threads - 1) * width, y * height, m_texture.getSize().x, (y + 1) * height };
-    }
-    rects[((threads - 1) * threads) + (threads - 1)] = sf::Rect{ (threads - 1) * width, (threads - 1) * height, m_texture.getSize().x, m_texture.getSize().y };
-
-    for (auto& rect : rects)
-    {
-        m_threads.push_back(std::make_unique<sf::Thread>([this, rect]
-        {
-            generate(rect);
-        }));
-    }
-}
-
-void Fractal::resize(const sf::Vector2u& size, const unsigned int threads)
+void Fractal::resize(const sf::Vector2u& size)
 {
     // Reset values
     m_pos = { -0.7, 0., 0.003 };
@@ -61,7 +30,6 @@ void Fractal::resize(const sf::Vector2u& size, const unsigned int threads)
     m_pixels.resize(size.x * size.y * 4, 0);
     m_texture.create(size.x, size.y);
     m_fractal.setTexture(m_texture, true);
-    setThreads(threads);
 }
 
 void Fractal::update(const sf::Vector2i& first, const sf::Vector2i& second)
@@ -99,15 +67,7 @@ void Fractal::update(const sf::Vector2i& first, const sf::Vector2i& second)
 
     m_pos = temporaryPosition;
 
-    for (const auto& thread : m_threads)
-    {
-        thread->launch();
-    }
-
-    for (const auto& thread : m_threads)
-    {
-        thread->wait();
-    }
+    generateParallel();
 
     m_texture.update(m_pixels.data());
 }
@@ -127,6 +87,12 @@ void Fractal::precision(const long double& precision)
 const long double& Fractal::precision() const
 {
     return m_precision;
+}
+
+sf::Uint8 Fractal::color(const unsigned int c, const long double z, const sf::Uint8 x, const sf::Uint8 sX, const int sign) const
+{
+    return std::round(static_cast<long double>(c + 1) / (std::log(z) / std::log(static_cast<double long>(10)) + 1) *
+        (255 / (std::log(static_cast<double long>(255 * +(sign * x))) / std::log(static_cast<double long>(10))))) * -sX / m_pfact;
 }
 
 void Fractal::generate(const sf::Rect<unsigned int> section)
@@ -249,10 +215,35 @@ void Fractal::generate(const sf::Rect<unsigned int> section)
     }
 }
 
-sf::Uint8 Fractal::color(const unsigned int c, const long double z, const sf::Uint8 x, const sf::Uint8 sX, const int sign) const
+void Fractal::generateParallel()
 {
-    return std::round(static_cast<long double>(c + 1) / (std::log(z) / std::log(static_cast<double long>(10)) + 1) *
-        (255 / (std::log(static_cast<double long>(255 * +(sign * x))) / std::log(static_cast<double long>(10))))) * -sX / m_pfact;
+    auto rects = std::vector<sf::Rect<unsigned int>>{ m_parallelization * m_parallelization };
+
+    const auto width = m_texture.getSize().x / m_parallelization;
+    const auto height = m_texture.getSize().y / m_parallelization;
+
+    for (auto y = 0U; y < m_parallelization; ++y)
+    {
+        for (auto x = 0U; x < m_parallelization; ++x)
+        {
+            rects[(y * m_parallelization) + x] = sf::Rect{ x * width, y * height, (x + 1) * width, (y + 1) * height };
+        }
+        rects[(y * m_parallelization) + (m_parallelization - 1)] = sf::Rect{ (m_parallelization - 1) * width, y * height, m_texture.getSize().x, (y + 1) * height };
+    }
+    rects[((m_parallelization - 1) * m_parallelization) + (m_parallelization - 1)] = sf::Rect{ (m_parallelization - 1) * width, (m_parallelization - 1) * height, m_texture.getSize().x, m_texture.getSize().y };
+
+    std::vector<std::future<void>> workers;
+    workers.reserve(m_parallelization);
+
+    for (auto& rect : rects)
+    {
+        workers.emplace_back(std::async(std::launch::async, &Fractal::generate, this, rect));
+    }
+
+    for (const auto& worker : workers)
+    {
+        worker.wait();
+    }
 }
 
 void Fractal::draw(sf::RenderTarget& target, sf::RenderStates states) const

@@ -10,7 +10,7 @@
 
 Application::Application() :
     m_window{ { 1000, 765 }, "Fractal - Mandelbrot" },
-    m_fractal{ { 1000, 765 }, 4 },
+    m_fractal{ { 1000, 765 }, 8 },
     m_down{ -1, -1 },
     m_resized{ true }
 {
@@ -173,7 +173,7 @@ void Application::onResize()
     m_window.setView(m_staticView);
 
     // Resize & update the fractal
-    m_fractal.resize(sf::Vector2u{ size }, 4);
+    m_fractal.resize(sf::Vector2u{ size });
     paused();
     m_fractal.update({ 0, 0 }, sf::Vector2i{ size });
 }
