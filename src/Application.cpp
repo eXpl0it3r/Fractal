@@ -47,17 +47,21 @@ void Application::update()
     {
         // Ignore the events happened before/while resizing
         if (m_resized)
+        {
             continue;
+        }
 
         if (event.type == sf::Event::Closed)
+        {
             m_window.close();
-        // Set select frame
+        }
+            // Set select frame
         else if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
         {
             m_down.x = event.mouseButton.x;
             m_down.y = event.mouseButton.y;
         }
-        // Update
+            // Update
         else if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
         {
             // Feedback for user
@@ -74,9 +78,13 @@ void Application::update()
             if (event.key.code == sf::Keyboard::Up || event.key.code == sf::Keyboard::Down)
             {
                 if (event.key.code == sf::Keyboard::Up)
+                {
                     m_fractal.precision(m_fractal.precision() + 10);
+                }
                 else if (event.key.code == sf::Keyboard::Down)
+                {
                     m_fractal.precision(m_fractal.precision() - 10);
+                }
 
                 m_precision.setString(std::format("{:4.0f}", m_fractal.precision()));
             }
@@ -90,7 +98,9 @@ void Application::update()
             }
         }
         else if (event.type == sf::Event::Resized)
+        {
             onResize();
+        }
     }
     m_resized = false;
 
@@ -101,7 +111,9 @@ void Application::update()
         m_select.setSize(sf::Vector2f{ sf::Mouse::getPosition(m_window) } - sf::Vector2f{ m_down });
     }
     else
+    {
         m_select.setSize({ 0, 0 });
+    }
 }
 
 void Application::draw()
@@ -129,7 +141,9 @@ void Application::paused(const bool fractal)
 
     m_window.clear();
     if (fractal)
+    {
         m_window.draw(m_fractal);
+    }
     m_window.draw(rect);
     m_window.draw(wait);
     m_window.display();
@@ -143,9 +157,13 @@ void Application::onResize()
 
     // Minimum size
     if (size.x < 800)
+    {
         size.x = 800;
+    }
     if (size.y < 600)
+    {
         size.y = 600;
+    }
 
     // Apply possible size changes
     m_window.setSize(sf::Vector2u{ size });

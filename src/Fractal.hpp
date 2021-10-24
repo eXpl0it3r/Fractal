@@ -30,7 +30,7 @@ public:
     const long double& precision() const;
 
 private:
-    void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+    void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
     void setThreads(unsigned int threads);
     sf::Uint8 color(unsigned int c, long double z, sf::Uint8 X, sf::Uint8 sX, int sign) const;

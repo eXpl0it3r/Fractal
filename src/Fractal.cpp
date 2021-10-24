@@ -20,7 +20,9 @@ void Fractal::setThreads(const unsigned int threads)
 {
     // Stop and clear threads
     for (const auto& thread : m_threads)
+    {
         thread->wait();
+    }
     m_threads.clear();
 
     auto rects = std::vector<sf::Rect<unsigned int>>{ threads * threads };
@@ -40,7 +42,10 @@ void Fractal::setThreads(const unsigned int threads)
 
     for (auto& rect : rects)
     {
-        m_threads.push_back(std::make_unique<sf::Thread>([this, rect] { generate(rect); }));
+        m_threads.push_back(std::make_unique<sf::Thread>([this, rect]
+        {
+            generate(rect);
+        }));
     }
 }
 
@@ -72,14 +77,22 @@ void Fractal::update(const sf::Vector2i& first, const sf::Vector2i& second)
     else
     {
         if (second.x < first.x)
+        {
             temporaryPosition.x = m_pos.x + (first.x - (first.x - second.x) / 2. - m_texture.getSize().x / 2.) * m_pos.z; // x coordinate
+        }
         else
+        {
             temporaryPosition.x = m_pos.x + (second.x - (second.x - first.x) / 2. - m_texture.getSize().x / 2.) * m_pos.z;
+        }
 
         if (second.y < first.y)
+        {
             temporaryPosition.y = m_pos.y + (first.y - (first.y - second.y) / 2. - m_texture.getSize().y / 2.) * m_pos.z; // y coordinate
+        }
         else
+        {
             temporaryPosition.y = m_pos.y + (second.y - (second.y - first.y) / 2. - m_texture.getSize().y / 2.) * m_pos.z;
+        }
 
         temporaryPosition.z = m_pos.z * (std::abs(first.x - second.x) / static_cast<long double>(m_texture.getSize().x) + std::abs(first.y - second.y) / static_cast<long double>(m_texture.getSize().y)) / 2.; // scale
     }
@@ -87,10 +100,14 @@ void Fractal::update(const sf::Vector2i& first, const sf::Vector2i& second)
     m_pos = temporaryPosition;
 
     for (const auto& thread : m_threads)
+    {
         thread->launch();
+    }
 
     for (const auto& thread : m_threads)
+    {
         thread->wait();
+    }
 
     m_texture.update(m_pixels.data());
 }
@@ -98,9 +115,13 @@ void Fractal::update(const sf::Vector2i& first, const sf::Vector2i& second)
 void Fractal::precision(const long double& precision)
 {
     if (precision > 0)
+    {
         m_precision = precision;
+    }
     else
+    {
         m_precision = 10;
+    }
 }
 
 const long double& Fractal::precision() const
@@ -110,8 +131,8 @@ const long double& Fractal::precision() const
 
 void Fractal::generate(sf::Rect<unsigned int> section)
 {
-	const auto mx = static_cast<int>(m_texture.getSize().x / 2.f);
-	const auto my = static_cast<int>(m_texture.getSize().y / 2.f);
+    const auto mx = static_cast<int>(m_texture.getSize().x / 2.f);
+    const auto my = static_cast<int>(m_texture.getSize().y / 2.f);
 
     auto iteration = 0;
 
@@ -122,6 +143,7 @@ void Fractal::generate(sf::Rect<unsigned int> section)
     long double b1 = 0;
 
     for (int x = section.left; x < section.width; ++x)
+    {
         for (int y = section.top; y < section.height; ++y)
         {
             // Mathematical values
@@ -138,11 +160,14 @@ void Fractal::generate(sf::Rect<unsigned int> section)
                 a2 = a1 * a1 - b1 * b1 + ax; // square of a+bi, done component-wise
                 b1 = 2 * a1 * b1 + ay;
                 a1 = a2; // b1 = b2;
-            } while (!((iteration > m_precision) || ((a1 * a1) + (b1 * b1) > 4)));
+            }
+            while (!((iteration > m_precision) || ((a1 * a1) + (b1 * b1) > 4)));
             // 1. condition: we have convergence. 2. condition: we have divergence.
 
             if (iteration > m_precision)
+            {
                 iteration = 0; // Point belongs to the set (inner black area)
+            }
 
             //(x, y, iteration, (a1*a1) + (b1*b1)); // calculates the color regarding the iteration (and maybe the last element of the series)
             auto pixel = sf::Color{ 0, 0, 0, 255 };
@@ -150,43 +175,70 @@ void Fractal::generate(sf::Rect<unsigned int> section)
             if (iteration > 0)
             {
                 if (m_sX.r < 0)
+                {
                     if (m_X.r < 0)
+                    {
                         pixel.r = color(iteration, (a1 * a1) + (b1 * b1), m_X.r, m_sX.r, -1);
+                    }
                     else
+                    {
                         pixel.r = color(iteration, (a1 * a1) + (b1 * b1), m_X.r, m_sX.r, 1);
-                else
-                    pixel.r = iteration * m_sX.r / m_pfact;
+                    }
+                }
+                pixel.r = iteration * m_sX.r / m_pfact;
 
                 if (m_sX.g < 0)
+                {
                     if (m_X.g < 0)
+                    {
                         pixel.g = color(iteration, (a1 * a1) + (b1 * b1), m_X.g, m_sX.g, -1);
+                    }
                     else
+                    {
                         pixel.g = color(iteration, (a1 * a1) + (b1 * b1), m_X.g, m_sX.g, 1);
-                else
-                    pixel.g = iteration * m_sX.g / m_pfact;
+                    }
+                }
+                pixel.g = iteration * m_sX.g / m_pfact;
 
                 if (m_sX.b < 0)
+                {
                     if (m_X.b < 0)
+                    {
                         pixel.b = color(iteration, (a1 * a1) + (b1 * b1), m_X.b, m_sX.b, -1);
+                    }
                     else
+                    {
                         pixel.b = color(iteration, (a1 * a1) + (b1 * b1), m_X.b, m_sX.b, 1);
-                else
-                    pixel.b = iteration * m_sX.b / m_pfact;
+                    }
+                }
+                pixel.b = iteration * m_sX.b / m_pfact;
 
                 if (m_X.r > 0)
+                {
                     pixel.r = pixel.r % (255 - m_X.r);
+                }
                 else if (m_sX.r != 0)
+                {
                     pixel.r = 255 + m_X.r - (pixel.r % (255 + m_X.r));
+                }
 
                 if (m_X.g > 0)
+                {
                     pixel.g = pixel.g % (255 - m_X.g);
+                }
                 else if (m_sX.g != 0)
+                {
                     pixel.g = 255 + m_X.g - (pixel.g % (255 + m_X.g));
+                }
 
                 if (m_X.b > 0)
+                {
                     pixel.b = pixel.b % (255 - m_X.b);
+                }
                 else if (m_sX.b != 0)
+                {
                     pixel.b = 255 + m_X.b - (pixel.b % (255 + m_X.b));
+                }
             }
 
             m_pixels[((y * m_texture.getSize().x) + x) * 4] = pixel.r;
@@ -194,6 +246,7 @@ void Fractal::generate(sf::Rect<unsigned int> section)
             m_pixels[((y * m_texture.getSize().x) + x) * 4 + 2] = pixel.b;
             m_pixels[((y * m_texture.getSize().x) + x) * 4 + 3] = pixel.a;
         }
+    }
 }
 
 sf::Uint8 Fractal::color(const unsigned int c, const long double z, const sf::Uint8 X, const sf::Uint8 sX, const int sign) const
