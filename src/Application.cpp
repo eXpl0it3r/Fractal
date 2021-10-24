@@ -5,35 +5,31 @@
 #include <SFML/Window/Mouse.hpp>
 #include <SFML/Window/Keyboard.hpp>
 #include <SFML/Graphics/Rect.hpp>
-#include <SFML/System/Sleep.hpp>
 
-#include <cmath>
-#include <sstream>
+#include <format>
 
 Application::Application() :
-    m_window(sf::VideoMode(1000, 765), "Fractal - Mandelbrot"),//, sf::Style::Titlebar | sf::Style::Close),
-    m_fractal(sf::Vector2u(1000, 765), 4),
-    m_down(-1, -1),
-    m_resized(true)
+    m_window{ { 1000, 765 }, "Fractal - Mandelbrot" },
+    m_fractal{ { 1000, 765 }, 4 },
+    m_down{ -1, -1 },
+    m_resized{ true }
 {
     m_window.setFramerateLimit(60);
 
     // Init select frame
-    m_select.setFillColor(sf::Color(0, 0, 0, 0));
-    m_select.setOutlineColor(sf::Color(255, 255, 255, 255));
+    m_select.setFillColor({ 0, 0, 0, 0 });
+    m_select.setOutlineColor({ 255, 255, 255, 255 });
     m_select.setOutlineThickness(-2.f);
 
     m_font.loadFromFile("DejaVuSans.ttf");
     m_precision.setFont(m_font);
     m_precision.setPosition(10.f, 10.f);
     m_precision.setCharacterSize(20.f);
-    std::stringstream ss;
-    ss << std::fixed << static_cast<int>(m_fractal.precision());
-    m_precision.setString(ss.str());
+    m_precision.setString(std::format("{:4.0f}", m_fractal.precision()));
 
     // Init fractal
     paused(true);
-    m_fractal.update(sf::Vector2i(0, 0), static_cast<sf::Vector2i>(m_window.getSize()));
+    m_fractal.update({ 0, 0 }, sf::Vector2i{ m_window.getSize() });
 }
 
 void Application::run()
@@ -47,8 +43,7 @@ void Application::run()
 
 void Application::update()
 {
-    sf::Event event;
-    while (m_window.pollEvent(event))
+    for (auto event = sf::Event{}; m_window.pollEvent(event);)
     {
         // Ignore the events happened before/while resizing
         if (m_resized)
@@ -69,11 +64,10 @@ void Application::update()
             paused();
 
             // Update fractal
-            m_fractal.update(m_down, sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
+            m_fractal.update(m_down, { event.mouseButton.x, event.mouseButton.y });
 
             // No select frame
-            m_down.x = -1;
-            m_down.y = -1;
+            m_down = { -1, -1 };
         }
         else if (event.type == sf::Event::KeyPressed)
         {
@@ -84,9 +78,7 @@ void Application::update()
                 else if (event.key.code == sf::Keyboard::Down)
                     m_fractal.precision(m_fractal.precision() - 10);
 
-                std::stringstream ss;
-                ss << std::fixed << static_cast<int>(m_fractal.precision());
-                m_precision.setString(ss.str());
+                m_precision.setString(std::format("{:4.0f}", m_fractal.precision()));
             }
         }
         else if (event.type == sf::Event::KeyReleased)
@@ -94,7 +86,7 @@ void Application::update()
             if (event.key.code == sf::Keyboard::Return)
             {
                 paused();
-                m_fractal.update(sf::Vector2i(0, 0), static_cast<sf::Vector2i>(m_window.getSize()));
+                m_fractal.update({ 0, 0 }, sf::Vector2i{ m_window.getSize() });
             }
         }
         else if (event.type == sf::Event::Resized)
@@ -103,13 +95,13 @@ void Application::update()
     m_resized = false;
 
     // Change select frame
-    if (m_down.x != -1 && m_down.x != -1)
+    if (m_down.x != -1 && m_down.y != -1)
     {
-        m_select.setPosition(static_cast<sf::Vector2f>(m_down));
-        m_select.setSize(static_cast<sf::Vector2f>(sf::Mouse::getPosition(m_window)) - static_cast<sf::Vector2f>(m_down));
+        m_select.setPosition(sf::Vector2f{ m_down });
+        m_select.setSize(sf::Vector2f{ sf::Mouse::getPosition(m_window) } - sf::Vector2f{ m_down });
     }
     else
-        m_select.setSize(sf::Vector2f(0, 0));
+        m_select.setSize({ 0, 0 });
 }
 
 void Application::draw()
@@ -123,17 +115,17 @@ void Application::draw()
     m_window.display();
 }
 
-void Application::paused(bool fractal)
+void Application::paused(const bool fractal)
 {
     sf::Text wait;
     wait.setFont(m_font);
     wait.setCharacterSize(30);
     wait.setString("Please Wait!");
-    wait.setPosition(static_cast<sf::Vector2f>(m_window.getSize()) / 2.f - sf::Vector2f(wait.getLocalBounds().width, wait.getLocalBounds().height) / 2.f);
+    wait.setPosition(sf::Vector2f{ m_window.getSize() } / 2.f - sf::Vector2f{ wait.getLocalBounds().width, wait.getLocalBounds().height } / 2.f);
 
     sf::RectangleShape rect;
-    rect.setSize(static_cast<sf::Vector2f>(m_window.getSize()));
-    rect.setFillColor(sf::Color(10, 10, 10, 220));
+    rect.setSize(sf::Vector2f{ m_window.getSize() });
+    rect.setFillColor({ 10, 10, 10, 220 });
 
     m_window.clear();
     if (fractal)
@@ -147,7 +139,7 @@ void Application::onResize()
 {
     m_resized = true;
 
-    sf::Vector2f size = static_cast<sf::Vector2f>(m_window.getSize());
+    auto size = sf::Vector2f{ m_window.getSize() };
 
     // Minimum size
     if (size.x < 800)
@@ -156,17 +148,14 @@ void Application::onResize()
         size.y = 600;
 
     // Apply possible size changes
-    m_window.setSize(static_cast<sf::Vector2u>(size));
+    m_window.setSize(sf::Vector2u{ size });
 
     // Reset static (1:1) view
-    m_staticView = sf::View(sf::FloatRect(0.f, 0.f, size.x, size.y));
+    m_staticView = sf::View{ { 0.f, 0.f, size.x, size.y } };
     m_window.setView(m_staticView);
 
-    // The sidebar should be 180px wide
-    const float width = 180.f;
-
     // Resize & update the fractal
-    m_fractal.resize(static_cast<sf::Vector2u>(size), 4);
+    m_fractal.resize(sf::Vector2u{ size }, 4);
     paused();
-    m_fractal.update(sf::Vector2i(0, 0), static_cast<sf::Vector2i>(size));
+    m_fractal.update({ 0, 0 }, sf::Vector2i{ size });
 }

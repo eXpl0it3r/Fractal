@@ -21,22 +21,21 @@ namespace sf
 class Fractal : public sf::Drawable
 {
 public:
-    Fractal(const sf::Vector2u& size, const unsigned int threads = 3);
+    Fractal(const sf::Vector2u& size, unsigned int threads = 3);
 
     void update(const sf::Vector2i& first, const sf::Vector2i& second);
 
-    void resize(const sf::Vector2u& size, const unsigned int threads = 3);
+    void resize(const sf::Vector2u& size, unsigned int threads = 3);
     void precision(const long double& precision);
-    const long double& precision();
+    const long double& precision() const;
 
 private:
     void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 
-    void setThreads(const unsigned int threads);
-    sf::Uint8 color(const unsigned int c, const long double z, const sf::Uint8 X, const sf::Uint8 sX, const int sign) const;
+    void setThreads(unsigned int threads);
+    sf::Uint8 color(unsigned int c, long double z, sf::Uint8 X, sf::Uint8 sX, int sign) const;
     void generate(sf::Rect<unsigned int> section);
 
-private:
     std::vector<std::unique_ptr<sf::Thread>> m_threads;
 
     // Drawing
