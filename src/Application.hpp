@@ -24,14 +24,13 @@ private:
 
     void onResize();
 
-private:
     sf::RenderWindow m_window;
     Fractal m_fractal;
     sf::Vector2i m_down;
     sf::RectangleShape m_select;
     sf::Font m_font;
     sf::Text m_precision;
-    sf::Clock m_frametime;
+    sf::Clock m_frameTime;
 
     sf::View m_staticView;
     bool m_resized;

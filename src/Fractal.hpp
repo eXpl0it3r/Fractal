@@ -18,10 +18,10 @@ namespace sf
     class RenderTarget;
 }
 
-class Fractal : public sf::Drawable
+class Fractal final : public sf::Drawable
 {
 public:
-    Fractal(const sf::Vector2u& size, unsigned int threads = 3);
+    explicit Fractal(const sf::Vector2u& size, unsigned int threads = 3);
 
     void update(const sf::Vector2i& first, const sf::Vector2i& second);
 
@@ -33,7 +33,7 @@ private:
     void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
     void setThreads(unsigned int threads);
-    sf::Uint8 color(unsigned int c, long double z, sf::Uint8 X, sf::Uint8 sX, int sign) const;
+    sf::Uint8 color(unsigned int c, long double z, sf::Uint8 x, sf::Uint8 sX, int sign) const;
     void generate(sf::Rect<unsigned int> section);
 
     std::vector<std::unique_ptr<sf::Thread>> m_threads;
@@ -47,6 +47,6 @@ private:
     sf::Vector3<long double> m_pos;
     float m_pfact;
     long double m_precision;
-    sf::Color m_X;
+    sf::Color m_x;
     sf::Color m_sX;
 };
