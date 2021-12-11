@@ -42,6 +42,7 @@ void Fractal::reset(const sf::Vector2u& size, const unsigned int parallelization
 	m_sX = sf::Color{ 3, static_cast<sf::Uint8>(-1), static_cast<sf::Uint8>(-7) };
 	resize(size);
 	generateParallel();
+	update({ 0, 0 }, sf::Vector2i{ size });
 }
 
 void Fractal::update(const sf::Vector2i& first, const sf::Vector2i& second)

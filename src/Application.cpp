@@ -104,8 +104,6 @@ void Application::update()
 			{
 				paused();
 				m_fractal.reset(m_window.getSize());
-				m_fractal.update({ 0, 0 }, sf::Vector2i{ m_window.getSize() });
-				m_precision.setString(std::format("{:4.0f}", m_fractal.precision()));
 			}
 		}
 		else if (event.type == sf::Event::Resized)
@@ -125,6 +123,9 @@ void Application::update()
 	{
 		m_select.setSize({ 0, 0 });
 	}
+
+	// Update precision text
+	m_precision.setString(std::format("{:4.0f}", m_fractal.precision()));
 }
 
 void Application::draw()
@@ -183,8 +184,7 @@ void Application::onResize()
 	m_staticView = sf::View{ { 0.f, 0.f, size.x, size.y } };
 	m_window.setView(m_staticView);
 
-	// Resize & update the fractal
-	m_fractal.resize(sf::Vector2u{ size });
+	// Reset the fractal
 	paused();
-	m_fractal.update({ 0, 0 }, sf::Vector2i{ size });
+	m_fractal.reset(sf::Vector2u{ size });
 }
