@@ -13,25 +13,25 @@
 class Application
 {
 public:
-    Application();
-    void run();
+	Application();
+	void run();
 
 private:
-    void update();
-    void draw();
+	void update();
+	void draw();
 
-    void paused(bool fractal = true);
+	void paused(bool fractal = true);
 
-    void onResize();
+	void onResize();
 
-    sf::RenderWindow m_window;
-    Fractal m_fractal;
-    sf::Vector2i m_down;
-    sf::RectangleShape m_select;
-    sf::Font m_font;
-    sf::Text m_precision;
-    sf::Clock m_frameTime;
+	sf::RenderWindow m_window;
+	Fractal m_fractal;
+	sf::Vector2i m_down;
+	sf::RectangleShape m_select;
+	sf::Font m_font;
+	sf::Text m_precision;
+	sf::Clock m_frameTime;
 
-    sf::View m_staticView;
-    bool m_resized;
+	sf::View m_staticView;
+	bool m_resized;
 };
