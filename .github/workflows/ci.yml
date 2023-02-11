@@ -14,24 +14,22 @@ jobs:
           - { name: Windows VS2019, os: windows-2019 }
           - { name: Windows VS2022, os: windows-2022 }
           # Waiting for std library support of std::format
-          #- { name: Linux GCC, os: ubuntu-20.04 }
-          #- {
-          #    name: Linux Clang,
-          #    os: ubuntu-20.04,
-          #    flags: -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++,
-          #  }
+          #- { name: Linux GCC, os: ubuntu-20.04, flags: -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 }
+          #- { name: Linux Clang, os: ubuntu-20.04, flags: -DCMAKE_C_COMPILER=clang-14 -DCMAKE_CXX_COMPILER=clang++-14 }
           #- { name: MacOS XCode, os: macos-11 }
 
     steps:
       - name: Install Linux Dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install libxrandr-dev libxcursor-dev libudev-dev libopenal-dev libflac-dev libvorbis-dev libgl1-mesa-dev libegl1-mesa-dev
+        run: |
+             sudo apt-get update
+             sudo apt-get install libxrandr-dev libxcursor-dev libudev-dev libopenal-dev libflac-dev libvorbis-dev libgl1-mesa-dev libegl1-mesa-dev gcc-13 g++-13 glang-14
 
       - name: Fractal - Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: SFML - Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: SFML/SFML
           path: SFML
